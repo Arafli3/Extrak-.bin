@@ -1,47 +1,11 @@
 # Extrak-.bin
-Untuk mengekstrak file .deb di Linux tanpa menginstalnya, kamu bisa menggunakan perintah dpkg-deb atau alat lain seperti ar. Berikut beberapa cara:
+upload file ke vps /root/R01FInject.deb
 
-1. Menggunakan dpkg-deb
-<pre><code>
-dpkg-deb -x nama_file.deb nama_folder_tujuan
-</code></pre>
-Contoh:
-<pre><code>
-dpkg-deb -x paketku.deb ./output
-</code></pre>
-Ini akan mengekstrak isi paket ke folder ./output.
-
-2. Menggunakan ar dan tar
-
-File .deb sebenarnya adalah file arsip standar Unix. Kamu bisa mengekstraknya seperti ini:
-<pre><code>
-ar x nama_file.deb
-</code></pre>
-Ini akan menghasilkan tiga file utama:
-
-control.tar.gz (informasi kontrol/paket)
-
-data.tar.gz atau data.tar.xz (isi file sesungguhnya)
-
-debian-binary (versi format .deb)
-
-
-Setelah itu, ekstrak data.tar.*:
-<pre><code>
-tar -xf data.tar.gz
-</code></pre>
-Atau jika xz:
-<pre><code>
-tar -xf data.tar.xz
-</code></pre>
-Ini akan mengekstrak file aplikasi ke direktori saat ini.
-
-Perlu bantuan mengekstrak bagian kontrol juga?
-
-Sebelumnya instal dulu
+Install
 <pre><code>apt update
 apt install binutils</code></pre>
-buat nama: edit_and_repack_deb.sh
+
+buat nama di /root/: edit_and_repack_deb.sh
 
 masukan kode berikut
 <pre><code>#!/bin/bash
