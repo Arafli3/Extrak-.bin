@@ -5,81 +5,56 @@ Install
 <pre><code>apt update
 apt install binutils</code></pre>
 
-buat nama di /root/: edit_and_repack_deb.sh
+buat nama di /root/: repack-deb-ar.sh
 
 masukan kode berikut
 <pre><code>#!/bin/bash
 
-# Nama file .deb
-DEB_FILE="R01FInject.deb"
-WORKDIR="extract_deb"
-OUTPUT_DEB="R01FInject_modified.deb"
-
-# Step 1: Cek file .deb
-if [ ! -f "$DEB_FILE" ]; then
-    echo "File $DEB_FILE tidak ditemukan!"
-    exit 1
+# Pastikan file .deb diberikan
+if [ -z "$1" ]; then
+  echo "Contoh penggunaan: ./repack-deb.sh paketmu.deb"
+  exit 1
 fi
 
-# Step 2: Bersihkan dan buat folder kerja
-rm -rf "$WORKDIR"
-mkdir "$WORKDIR"
-cd "$WORKDIR" || exit 1
+DEB_FILE="$1"
+BASENAME=$(basename "$DEB_FILE" .deb)
+WORK_DIR="deb-ar-work"
+REPACKED_FILE="repacked-${BASENAME}.deb"
 
-# Step 3: Ekstrak isi .deb
-ar x "../$DEB_FILE"
+# Bersihkan folder kerja
+rm -rf "$WORK_DIR"
+mkdir -p "$WORK_DIR"
 
-# Step 4: Ekstrak control.tar.*
-mkdir control
-if [ -f control.tar.xz ]; then
-    tar -xf control.tar.xz -C control
-elif [ -f control.tar.gz ]; then
-    tar -xzf control.tar.gz -C control
-else
-    echo "File control.tar.* tidak ditemukan!"
-    exit 1
+# Ekstrak .deb menggunakan ar
+cd "$WORK_DIR"
+ar x ../"$DEB_FILE"
+if [ $? -ne 0 ]; then
+  echo "Gagal mengekstrak .deb menggunakan ar"
+  exit 1
 fi
 
-# Step 5: Ekstrak data.tar.*
-mkdir data
-if [ -f data.tar.xz ]; then
-    tar -xf data.tar.xz -C data
-elif [ -f data.tar.gz ]; then
-    tar -xzf data.tar.gz -C data
-else
-    echo "File data.tar.* tidak ditemukan!"
-    exit 1
-fi
+# Ekstrak control dan data archive
+mkdir control data
+tar -xf control.tar.* -C control
+tar -xf data.tar.* -C data
 
-echo ""
-echo "=== Ekstraksi selesai ==="
-echo "Folder 'control/' dan 'data/' sudah tersedia untuk diedit."
-echo ""
+echo "[+] File diekstrak ke $WORK_DIR/control dan $WORK_DIR/data"
+echo "[+] Silakan edit file di dalam folder tersebut."
+echo "Tekan ENTER jika sudah selesai mengedit..."
+read
 
-# Step 6: Pause untuk edit manual
-read -p "Tekan ENTER setelah selesai mengedit..."
+# Rekompres control dan data
+rm control.tar.* data.tar.*
 
-# Step 7: Packing ulang control.tar.gz dan data.tar.gz
-echo "Mempacking ulang..."
+tar -czf control.tar.gz -C control .
+tar -czf data.tar.gz -C data .
 
-# Buang file .tar.gz lama
-rm -f control.tar.* data.tar.*
-
-# Repack control
-tar --owner=0 --group=0 -czf control.tar.gz -C control .
-
-# Repack data
-tar --owner=0 --group=0 -czf data.tar.gz -C data .
-
-# Step 8: Buat file .deb baru
-rm -f "../$OUTPUT_DEB"
-ar rcs "../$OUTPUT_DEB" debian-binary control.tar.gz data.tar.gz
+# Buat ulang .deb dengan ar
+echo "2.0" > debian-binary
+ar rcs "../$REPACKED_FILE" debian-binary control.tar.gz data.tar.gz
 
 cd ..
-
-echo ""
-echo "=== Repack selesai ==="
-echo "File baru: $OUTPUT_DEB"
-echo ""</code></pre>
+echo "[✓] Berhasil membuat $REPACKED_FILE dengan debian-binary"
+</code></pre>
 jalankan perintah
-<pre><code>./edit_and_repack_deb.sh</code></pre>
+<pre><code>./repack-deb-ar.sh R01FInject.deb</code></pre>
